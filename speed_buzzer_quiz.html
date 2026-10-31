@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>⚡ Speed Buzzer Quiz</title>
+<style>
+:root{--bg:#0b1022;--panel:#151d38;--muted:#aab5d6;--cyan:#51e5ff;--pink:#ff4fa3;--green:#62efad}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 20% 0,#26345e 0,transparent 38%),var(--bg);color:#f5f7ff;font:16px system-ui,Segoe UI,sans-serif;min-height:100vh}
+main{max-width:900px;margin:auto;padding:22px}.top{text-align:center;padding:24px 12px}.top h1{font-size:clamp(2rem,6vw,3.6rem);margin:0;letter-spacing:3px;text-shadow:0 0 24px #51e5ff66}.top p{color:var(--muted);margin:8px}
+.panel{background:#151d38ed;border:1px solid #344269;border-radius:20px;padding:20px;margin:14px 0;box-shadow:0 16px 50px #0004}
+.row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}.row>*{flex:1}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.stat{background:#222d50;border-radius:14px;padding:12px;text-align:center}.stat b{display:block;font-size:1.5rem;color:var(--cyan)}
+input,select,button{font:inherit;border-radius:12px;border:1px solid #43527d;padding:12px;background:#0e1630;color:white}input{width:100%}button{cursor:pointer;font-weight:700;transition:.15s}button:hover{transform:translateY(-1px);filter:brightness(1.15)}button:disabled{opacity:.45;cursor:not-allowed;transform:none}.primary{background:linear-gradient(100deg,#167caa,#6a45c5);border:0}.buzz{background:linear-gradient(120deg,#f04473,#a91e68);border:0;width:100%;font-size:1.25rem;padding:18px}.good{color:var(--green)}.bad{color:#ff7799}.muted{color:var(--muted)}.hidden{display:none}.players{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}.player{background:#202b4b;border:1px solid #3a4a74;padding:13px;border-radius:14px}.player small{color:var(--muted)}.question{font-size:clamp(1.25rem,4vw,2rem);text-align:center;line-height:1.35}.options{display:grid;gap:10px}.options button{text-align:left;background:#202b4b}.options button:hover{border-color:var(--cyan)}.scoreline{display:flex;justify-content:space-between;padding:10px 12px;background:#202b4b;border-radius:10px;margin:7px 0}.tag{color:var(--cyan);font-size:.8rem;font-weight:800;letter-spacing:1px}.center{text-align:center}.room{font-size:1.7rem;letter-spacing:4px;color:var(--cyan);font-weight:900}.footer{text-align:center;color:#8794bb;font-size:.8rem;padding:15px}
+@media(max-width:560px){main{padding:12px}.panel{padding:15px}.stats{gap:6px}.stat{padding:9px}.row{align-items:stretch}}
+</style></head>
+<body><main>
+<header class="top"><div class="tag">THE LIVE GAME SHOW</div><h1>⚡ SPEED BUZZER</h1><p>Think fast. Buzz first. Win big.</p></header>
+<section id="lobby" class="panel">
+ <div class="row"><div><div class="tag">ROOM CODE</div><div class="room" id="roomCode">QUIZ26</div></div><button id="copyRoom">Copy code</button></div>
+ <p class="muted">Pass-and-play on one device. Each player takes a turn buzzing.</p>
+ <div class="row"><label>Players (2–8)<select id="playerCount"><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option></select></label><label>Questions<select id="roundCount"><option value="10">10 rounds</option><option value="15">15 rounds</option><option value="20" selected>20 rounds</option></select></label></div>
+ <div id="nameFields" class="players" style="margin:15px 0"></div>
+ <button class="primary" id="start" style="width:100%">START GAME →</button>
+</section>
+<section id="game" class="hidden">
+ <div class="panel"><div class="stats"><div class="stat"><b id="roundStat">1/20</b><small>ROUND</small></div><div class="stat"><b id="playerStat">2</b><small>PLAYERS</small></div><div class="stat"><b>+10</b><small>CORRECT</small></div></div></div>
+ <div class="panel"><div class="row"><span class="tag" id="roundLabel">QUESTION 1</span><span class="muted" id="gameRoom" style="text-align:right">ROOM QUIZ26</span></div><h2 class="question" id="question"></h2><div id="status" class="center muted">Buzzer is open — who knows it?</div></div>
+ <div id="buzzArea" class="panel"><h3 class="center">🔔 Buzzer controls</h3><div id="buzzPlayers" class="players"></div></div>
+ <div id="answerArea" class="panel hidden"><h3 id="answerTitle" class="center"></h3><div id="options" class="options"></div></div>
+ <div id="resultArea" class="panel hidden center"><h2 id="resultTitle"></h2><p id="correctAnswer"></p><button class="primary" id="next" style="width:100%">NEXT QUESTION →</button></div>
+ <div class="panel"><h3>🏆 Live leaderboard</h3><div id="scores"></div></div>
+ <button id="quit" style="width:100%">Exit to lobby</button>
+</section>
+<section id="final" class="panel hidden center"><h1>🏆 GAME OVER!</h1><h2 id="winner"></h2><div id="finalScores"></div><button class="primary" id="again" style="width:100%">PLAY AGAIN</button><button id="back" style="width:100%;margin-top:8px">BACK TO LOBBY</button></section>
+<div class="footer">Speed Buzzer Quiz · Local pass-and-play edition</div>
+</main>
+<script>
+const bank=[
+["Which planet is known as the Red Planet?",["Venus","Mars","Jupiter","Mercury"],1],
+["What is the capital of India?",["Mumbai","New Delhi","Jaipur","Kolkata"],1],
+["How many sides does a hexagon have?",["5","6","7","8"],1],
+["Which is the largest ocean?",["Atlantic","Indian","Pacific","Arctic"],2],
+["Who wrote Romeo and Juliet?",["Charles Dickens","William Shakespeare","Jane Austen","Mark Twain"],1],
+["What is H₂O commonly known as?",["Oxygen","Hydrogen","Water","Salt"],2],
+["Which animal is fastest on land?",["Lion","Cheetah","Horse","Tiger"],1],
+["How many days are in a leap year?",["364","365","366","367"],2],
+["Which is the largest planet?",["Earth","Saturn","Jupiter","Neptune"],2],
+["What is the currency of Japan?",["Yuan","Yen","Won","Dollar"],1],
+["Which gas do plants absorb?",["Oxygen","Nitrogen","Carbon dioxide","Hydrogen"],2],
+["How many colors are traditionally in a rainbow?",["5","6","7","8"],2],
+["Which country is home to the Eiffel Tower?",["Italy","France","Spain","Germany"],1],
+["What is 12 × 12?",["124","132","144","154"],2],
+["What is the smallest prime number?",["0","1","2","3"],2],
+["Which organ pumps blood around the body?",["Brain","Lungs","Heart","Liver"],2],
+["What is the hardest natural substance?",["Gold","Iron","Diamond","Quartz"],2],
+["Which sport uses a shuttlecock?",["Tennis","Badminton","Cricket","Hockey"],1],
+["How many continents are there?",["5","6","7","8"],2],
+["Which star is closest to Earth?",["Sirius","Polaris","The Sun","Alpha Centauri"],2]
+];
+let players=[],round=0,total=20,buzzed=-1,locked=false;
+const $=id=>document.getElementById(id);
+function code(){return Array.from({length:6},()=>"ABCDEFGHJKLMNPQRSTUVWXYZ23456789"[Math.floor(Math.random()*32)]).join("")}
+$("roomCode").textContent=code();
+function makeNames(){let n=+$("playerCount").value;$("nameFields").innerHTML="";for(let i=0;i<n;i++){let l=document.createElement("label");l.innerHTML=`Player ${i+1}<input maxlength="16" value="Player ${i+1}" aria-label="Player ${i+1} name">`;$("nameFields").append(l)}}
+$("playerCount").onchange=makeNames;makeNames();
+$("copyRoom").onclick=()=>{navigator.clipboard?.writeText($("roomCode").textContent);$("copyRoom").textContent="Copied!";setTimeout(()=>$("copyRoom").textContent="Copy code",1200)};
+$("start").onclick=()=>{players=[...$("nameFields").querySelectorAll("input")].map((x,i)=>({name:x.value.trim()||"Player "+(i+1),score:0}));total=+$("roundCount").value;round=0;$("lobby").classList.add("hidden");$("final").classList.add("hidden");$("game").classList.remove("hidden");showQuestion()};
+function leaderboard(target="scores"){let sorted=players.map((p,i)=>({...p,i})).sort((a,b)=>b.score-a.score);$(target).innerHTML=sorted.map((p,i)=>`<div class="scoreline"><span>${["🥇","🥈","🥉"][i]||"🏅"} ${esc(p.name)}</span><b>${p.score} pts</b></div>`).join("")}
+function esc(s){return s.replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function showQuestion(){buzzed=-1;locked=false;let q=bank[round%bank.length];$("roundStat").textContent=(round+1)+"/"+total;$("playerStat").textContent=players.length;$("roundLabel").textContent="QUESTION "+(round+1);$("gameRoom").textContent="ROOM "+$("roomCode").textContent;$("question").textContent=q[0];$("status").textContent="Buzzer is open — who knows it?";$("buzzArea").classList.remove("hidden");$("answerArea").classList.add("hidden");$("resultArea").classList.add("hidden");$("buzzPlayers").innerHTML=players.map((p,i)=>`<div class="player"><b>${esc(p.name)}</b><p><small>${p.score} points</small></p><button class="buzz" data-buzz="${i}">🔔 BUZZ!</button></div>`).join("");$("buzzPlayers").querySelectorAll("button").forEach(b=>b.onclick=()=>buzz(+b.dataset.buzz));leaderboard()}
+function buzz(i){if(locked)return;locked=true;buzzed=i;$("status").innerHTML=`🔒 <b class="good">${esc(players[i].name)}</b> buzzed first!`;$("buzzPlayers").querySelectorAll("button").forEach(b=>b.disabled=true);$("answerArea").classList.remove("hidden");$("answerTitle").textContent=players[i].name+" — choose your answer";let q=bank[round%bank.length];$("options").innerHTML=q[1].map((o,j)=>`<button data-answer="${j}">${"ABCD"[j]}. ${esc(o)}</button>`).join("");$("options").querySelectorAll("button").forEach(b=>b.onclick=()=>answer(+b.dataset.answer))}
+function answer(i){if(!locked)return;let q=bank[round%bank.length],correct=i===q[2];if(correct)players[buzzed].score+=10;$("answerArea").classList.add("hidden");$("resultArea").classList.remove("hidden");$("resultTitle").innerHTML=correct?`<span class="good">🎉 CORRECT! +10 points</span>`:`<span class="bad">❌ NOT QUITE!</span>`;$("correctAnswer").textContent="Correct answer: "+q[1][q[2]];$("status").textContent=correct?"Great answer!":"The correct answer is revealed.";leaderboard();$("next").textContent=round+1>=total?"SEE FINAL RESULTS →":"NEXT QUESTION →"}
+$("next").onclick=()=>{round++;if(round>=total){$("game").classList.add("hidden");$("final").classList.remove("hidden");let sorted=[...players].sort((a,b)=>b.score-a.score);$("winner").textContent=sorted[0].score===sorted[sorted.length-1].score?"It's a tie!":sorted[0].name+" wins with "+sorted[0].score+" points!";leaderboard("finalScores")}else showQuestion()};
+$("quit").onclick=()=>{$("game").classList.add("hidden");$("lobby").classList.remove("hidden")};
+$("again").onclick=()=>{$("final").classList.add("hidden");$("lobby").classList.remove("hidden")};
+$("back").onclick=()=>{$("final").classList.add("hidden");$("lobby").classList.remove("hidden")};
+</script></body></html>
